@@ -1,14 +1,17 @@
 import { BookOpenText, House, Info, Library, Plus } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
-
-const navigationLinks = [
-  { to: '/', label: 'Home', icon: House },
-  { to: '/about', label: 'About', icon: Info },
-  { to: '/browse', label: 'Browse', icon: Library },
-  { to: '/create', label: 'Create', icon: Plus },
-]
+import { useLanguage } from '../context/LanguageContext'
 
 function TopNav() {
+  const { t, language, toggleLanguage } = useLanguage()
+
+  const navigationLinks = [
+    { to: '/', label: t('nav.home'), icon: House },
+    { to: '/about', label: t('nav.about'), icon: Info },
+    { to: '/browse', label: t('nav.browse'), icon: Library },
+    { to: '/create', label: t('nav.create'), icon: Plus },
+  ]
+
   return (
     <header className="top-nav">
       <NavLink to="/" className="brand" aria-label="uoDecks home">
@@ -33,6 +36,15 @@ function TopNav() {
           </NavLink>
         ))}
       </nav>
+
+      <button
+        type="button"
+        onClick={toggleLanguage}
+        className="top-nav__language-toggle"
+        aria-label={language === 'fr' ? t('nav.switchToEnglish') : t('nav.switchToFrench')}
+      >
+        {language === 'fr' ? 'EN' : 'FR'}
+      </button>
     </header>
   )
 }
