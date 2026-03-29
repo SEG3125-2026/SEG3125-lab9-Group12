@@ -74,6 +74,7 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
   const [form, setForm] = useState(initialForm)
   const [errors, setErrors] = useState({ cardErrors: {} })
   const [showLeaveDialog, setShowLeaveDialog] = useState(false)
+  const [showTipsModal, setShowTipsModal] = useState(false)
   const [initialSerializedForm, setInitialSerializedForm] = useState(initialSerialized)
   const isDirty = JSON.stringify(form) !== initialSerializedForm
 
@@ -178,13 +179,18 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
   return (
     <>
       <form className="builder-layout" onSubmit={handleSave}>
-        <section className="surface-panel builder-main">
+        <section className="surface-panel">
           <div className="section-heading">
             <div>
               <p className="section-tag">Deck information</p>
               <h2>Set the basics first</h2>
             </div>
-            <span className="badge">{form.cards.length} draft cards</span>
+            <div className="topics-header__actions">
+              <span className="badge">{form.cards.length} draft cards</span>
+              <button type="button" className="button button--primary" onClick={() => setShowTipsModal(true)}>
+                View Builder Tips
+              </button>
+            </div>
           </div>
 
           <label className="form-field">
@@ -225,17 +231,6 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
             />
           </label>
         </section>
-
-        <aside className="surface-panel builder-sidebar">
-          <p className="section-tag">Builder Tips</p>
-          <h2>Make each card easy to review</h2>
-          <ul className="checklist">
-            <li>Keep one idea or definition per card so answers stay short and memorable.</li>
-            <li>Use familiar course names or topics to make decks easier to find later.</li>
-            <li>Write prompts that are specific enough to avoid vague guesses.</li>
-            <li>If you remove a card by mistake, use undo from the toast message right away.</li>
-          </ul>
-        </aside>
 
         <section className="surface-panel builder-main">
           <div className="section-heading">
@@ -313,6 +308,32 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
         onConfirm={() => navigate('/browse')}
         onCancel={() => setShowLeaveDialog(false)}
       />
+
+      {showTipsModal ? (
+        <div className="dialog-backdrop" role="presentation" onClick={() => setShowTipsModal(false)}>
+          <section
+            className="dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="builder-tips-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className="section-tag">Builder Tips</p>
+            <h2 id="builder-tips-title">Make each card easy to review</h2>
+            <ul className="checklist checklist--dialog">
+              <li>Keep one idea or definition per card so answers stay short and memorable.</li>
+              <li>Use familiar course names or topics to make decks easier to find later.</li>
+              <li>Write prompts that are specific enough to avoid vague guesses.</li>
+              <li>If you remove a card by mistake, use undo from the toast message right away.</li>
+            </ul>
+            <div className="dialog__actions">
+              <button type="button" className="button button--primary" onClick={() => setShowTipsModal(false)}>
+                Close
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </>
   )
 }

@@ -15,7 +15,7 @@ function TopNav() {
   return (
     <header className="top-nav">
       <NavLink to="/" className="brand" aria-label="uoDecks home">
-        <BookOpenText className="brand-mark" size={44} strokeWidth={2.1} aria-hidden="true" />
+        <BookOpenText className="brand-mark" size={30} strokeWidth={1.5} aria-hidden="true" />
         <span className="brand-wordmark">
           uo<span>Decks</span>
         </span>
