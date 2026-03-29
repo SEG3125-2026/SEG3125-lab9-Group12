@@ -1,5 +1,5 @@
 import { ArrowLeft, Eye, RefreshCw, CheckCircle2, XCircle } from 'lucide-react'
-import { useEffect, useEffectEvent, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ProgressBar from '../components/ProgressBar'
 import { useDeckLibrary } from '../context/DeckContext'
@@ -29,6 +29,7 @@ function StudyPage() {
   const { getDeckById, isLoading, loadError, recordDeckAccess, recordStudySession } = useDeckLibrary()
   const { pushToast } = useToast()
   const deck = getDeckById(deckId)
+  const initializedDeckIdRef = useRef(null)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [revealed, setRevealed] = useState(false)
   const [answers, setAnswers] = useState({})
@@ -48,12 +49,13 @@ function StudyPage() {
   })
 
   useEffect(() => {
-    if (!deck) {
+    if (!deck || initializedDeckIdRef.current === deck.id) {
       return
     }
 
+    initializedDeckIdRef.current = deck.id
     resetSession(deck)
-  }, [deck])
+  }, [deck?.id])
 
   async function finishSession(nextAnswers) {
     if (!deck) {
