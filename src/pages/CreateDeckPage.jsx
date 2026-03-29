@@ -200,6 +200,7 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
               <p className="section-tag">{t('create.deckInfoTag')}</p>
               <h2>{t('create.deckInfoTitle')}</h2>
               <p>{t('create.requiredNote')}</p>
+              <p style={{ color: 'red' }}>{t('create.warning')}</p>
             </div>
             <div className="topics-header__actions">
               <span className="badge">{form.cards.length} {t('create.draftCards')}</span>
