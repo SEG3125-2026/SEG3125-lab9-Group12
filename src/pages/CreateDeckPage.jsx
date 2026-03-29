@@ -112,35 +112,33 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
   }
 
   function deleteCard(cardId) {
-    setForm((currentForm) => {
-      const deletedIndex = currentForm.cards.findIndex((card) => card.id === cardId)
-      const deletedCard = currentForm.cards[deletedIndex]
+    const deletedIndex = form.cards.findIndex((card) => card.id === cardId)
+    const deletedCard = form.cards[deletedIndex]
 
-      if (!deletedCard || currentForm.cards.length === 1) {
-        return currentForm
-      }
+    if (!deletedCard || form.cards.length === 1) {
+      return
+    }
 
-      pushToast({
-        title: t('create.toastFlashcardRemovedTitle'),
-        message: t('create.toastFlashcardRemovedMessage'),
-        tone: 'info',
-        actionLabel: t('common.undo'),
-        onAction: () => {
-          setForm((latestForm) => {
-            const nextCards = [...latestForm.cards]
-            nextCards.splice(deletedIndex, 0, deletedCard)
-            return {
-              ...latestForm,
-              cards: nextCards,
-            }
-          })
-        },
-      })
+    setForm((currentForm) => ({
+      ...currentForm,
+      cards: currentForm.cards.filter((card) => card.id !== cardId),
+    }))
 
-      return {
-        ...currentForm,
-        cards: currentForm.cards.filter((card) => card.id !== cardId),
-      }
+    pushToast({
+      title: t('create.toastFlashcardRemovedTitle'),
+      message: t('create.toastFlashcardRemovedMessage'),
+      tone: 'info',
+      actionLabel: t('common.undo'),
+      onAction: () => {
+        setForm((latestForm) => {
+          const nextCards = [...latestForm.cards]
+          nextCards.splice(deletedIndex, 0, deletedCard)
+          return {
+            ...latestForm,
+            cards: nextCards,
+          }
+        })
+      },
     })
   }
 
