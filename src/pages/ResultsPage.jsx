@@ -62,8 +62,8 @@ function ResultsPage() {
   const navigate = useNavigate()
   const { t } = useLanguage()
   const { sessionId } = useParams()
-  const { getDeckById, studySessions } = useDeckLibrary()
   const hasPlayedCelebration = useRef(false)
+  const { getDeckById, isLoading, loadError, studySessions } = useDeckLibrary()
   const session = studySessions.find((studySession) => studySession.id === sessionId)
   const isPerfectScore = session?.accuracy === 100
 
@@ -92,6 +92,31 @@ function ResultsPage() {
     hasPlayedCelebration.current = true
     playCelebrationSound()
   }, [isPerfectScore])
+
+  if (isLoading) {
+    return (
+      <div className="page">
+        <section className="surface-panel empty-state">
+          <h1>Loading results</h1>
+          <p>Reading saved study sessions from the local SQL database.</p>
+        </section>
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="page">
+        <section className="surface-panel empty-state">
+          <h1>Database unavailable</h1>
+          <p>{loadError}</p>
+          <button type="button" className="button button--primary" onClick={() => navigate('/browse')}>
+            Browse decks
+          </button>
+        </section>
+      </div>
+    )
+  }
 
   if (!session) {
     return (

@@ -2,12 +2,22 @@
   "name": "seg3125-lab8-group12",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "client": "vite",
+    "server": "node server/index.mjs",
+    "dev": "concurrently -k \"npm:server\" \"npm:client\"",
+    "start": "node server/index.mjs",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "db:cli": "sqlite3 ./data/uodecks.sqlite",
+    "db:tables": "sqlite3 ./data/uodecks.sqlite '.tables'",
+    "db:decks": "sqlite3 -header -column ./data/uodecks.sqlite \"SELECT id, title, category, updated_at FROM decks ORDER BY updated_at DESC;\"",
+    "db:sessions": "sqlite3 -header -column ./data/uodecks.sqlite \"SELECT id, deck_title, accuracy, completed_at FROM study_sessions ORDER BY completed_at DESC;\"",
+    "db:open": "open -a '/Applications/DB Browser for SQLite.app' ./data/uodecks.sqlite"
   },
   "dependencies": {
+    "better-sqlite3": "^12.8.0",
+    "express": "^5.2.1",
     "lucide-react": "^0.577.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -18,6 +28,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.2.1",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",

@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import ProgressBar from '../components/ProgressBar'
 import { useDeckLibrary } from '../context/DeckContext'
 import { useLanguage } from '../context/LanguageContext'
+import { useToast } from '../context/ToastContext'
 
 function findNextIndex(cards, answers, currentIndex) {
   for (let index = currentIndex + 1; index < cards.length; index += 1) {
@@ -25,13 +26,14 @@ function StudyPage() {
   const navigate = useNavigate()
   const { t } = useLanguage()
   const { deckId } = useParams()
-  const { getDeckById, recordDeckAccess, recordStudySession } = useDeckLibrary()
+  const { getDeckById, isLoading, loadError, recordDeckAccess, recordStudySession } = useDeckLibrary()
+  const { pushToast } = useToast()
   const deck = getDeckById(deckId)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [revealed, setRevealed] = useState(false)
   const [answers, setAnswers] = useState({})
   const currentCard = deck?.cards[currentIndex] ?? null
-  const correctCount = Object.values(answers).filter((result) => result === 'correct').length
+  const correctCount = Object.values(answers).filter((result) => result === 'right').length
   const answeredCount = Object.keys(answers).length
   const currentCardResult = currentCard ? answers[currentCard.id] : null
   const progressValue = deck
@@ -39,7 +41,7 @@ function StudyPage() {
     : 0
 
   const resetSession = useEffectEvent((nextDeck) => {
-    recordDeckAccess(nextDeck.id)
+    void recordDeckAccess(nextDeck.id)
     setCurrentIndex(0)
     setRevealed(false)
     setAnswers({})
@@ -53,28 +55,37 @@ function StudyPage() {
     resetSession(deck)
   }, [deck])
 
-  function finishSession(nextAnswers) {
+  async function finishSession(nextAnswers) {
     if (!deck) {
       return
     }
 
-    const nextCorrectCount = Object.values(nextAnswers).filter((result) => result === 'correct').length
-    const nextSession = recordStudySession({
-      deckId: deck.id,
-      deckTitle: deck.title,
-      category: deck.category,
-      totalCards: deck.cards.length,
-      correctCount: nextCorrectCount,
-      incorrectCount: deck.cards.length - nextCorrectCount,
-      responses: deck.cards.map((card) => ({
-        cardId: card.id,
-        front: card.front,
-        back: card.back,
-        result: nextAnswers[card.id],
-      })),
-    })
+    const nextCorrectCount = Object.values(nextAnswers).filter((result) => result === 'right').length
 
-    navigate(`/results/${nextSession.id}`)
+    try {
+      const nextSession = await recordStudySession({
+        deckId: deck.id,
+        deckTitle: deck.title,
+        category: deck.category,
+        totalCards: deck.cards.length,
+        correctCount: nextCorrectCount,
+        incorrectCount: deck.cards.length - nextCorrectCount,
+        responses: deck.cards.map((card) => ({
+          cardId: card.id,
+          front: card.front,
+          back: card.back,
+          result: nextAnswers[card.id],
+        })),
+      })
+
+      navigate(`/results/${nextSession.id}`)
+    } catch (error) {
+      pushToast({
+        title: 'Unable to save study session',
+        message: error.message,
+        tone: 'danger',
+      })
+    }
   }
 
   function handleAnswer(result) {
@@ -92,7 +103,7 @@ function StudyPage() {
     const nextIndex = findNextIndex(deck.cards, nextAnswers, currentIndex)
 
     if (nextIndex === -1) {
-      finishSession(nextAnswers)
+      void finishSession(nextAnswers)
       return
     }
 
@@ -156,7 +167,7 @@ function StudyPage() {
 
     if ((event.key === 'c' || event.key.toLowerCase() === 'c') && revealed) {
       event.preventDefault()
-      handleAnswer('correct')
+      handleAnswer('right')
     }
   })
 
@@ -164,6 +175,31 @@ function StudyPage() {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
+
+  if (isLoading) {
+    return (
+      <div className="page">
+        <section className="surface-panel empty-state">
+          <h1>Loading study session</h1>
+          <p>Fetching the deck from the local SQL database.</p>
+        </section>
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="page">
+        <section className="surface-panel empty-state">
+          <h1>Database unavailable</h1>
+          <p>{loadError}</p>
+          <button type="button" className="button button--primary" onClick={() => navigate('/browse')}>
+            Back to browse
+          </button>
+        </section>
+      </div>
+    )
+  }
 
   if (!deck || !currentCard) {
     return (
@@ -238,10 +274,10 @@ function StudyPage() {
           {currentCardResult ? (
             <span
               className={
-                currentCardResult === 'correct' ? 'badge badge--success' : 'badge badge--danger'
+                currentCardResult === 'right' ? 'badge badge--success' : 'badge badge--danger'
               }
             >
-              {t('study.marked')} {currentCardResult === 'correct' ? t('study.markedCorrect') : t('study.markedWrong')}
+              {t('study.marked')} {currentCardResult === 'right' ? t('study.markedCorrect') : t('study.markedWrong')}
             </span>
           ) : null}
         </article>
@@ -267,7 +303,7 @@ function StudyPage() {
                 <XCircle size={16} strokeWidth={2.2} />
                 {t('study.gotWrong')}
               </button>
-              <button type="button" className="button button--success" onClick={() => handleAnswer('correct')}>
+              <button type="button" className="button button--success" onClick={() => handleAnswer('right')}>
                 <CheckCircle2 size={16} strokeWidth={2.2} />
                 {t('study.gotCorrect')}
               </button>

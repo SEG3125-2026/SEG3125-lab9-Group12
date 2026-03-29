@@ -90,6 +90,7 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
   const [showLeaveDialog, setShowLeaveDialog] = useState(false)
   const [showTipsModal, setShowTipsModal] = useState(false)
   const [initialSerializedForm, setInitialSerializedForm] = useState(initialSerialized)
+  const [isSaving, setIsSaving] = useState(false)
   const isDirty = JSON.stringify(form) !== initialSerializedForm
 
   function updateField(field, value) {
@@ -143,7 +144,7 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
     })
   }
 
-  function handleSave(event) {
+  async function handleSave(event) {
     event.preventDefault()
 
     const validationErrors = validateForm(form, t)
@@ -170,16 +171,26 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
       cards: meaningfulCards,
     }
 
-    const savedDeck = isEditing ? updateDeck(deckId, nextDeck) : createDeck(nextDeck)
+    try {
+      setIsSaving(true)
+      const savedDeck = isEditing ? await updateDeck(deckId, nextDeck) : await createDeck(nextDeck)
+      pushToast({
+        title: isEditing ? t('create.toastUpdatedTitle') : t('create.toastSavedTitle'),
+        message: t('create.toastSavedMessage'),
+        tone: 'success',
+      })
 
-    pushToast({
-      title: isEditing ? t('create.toastUpdatedTitle') : t('create.toastSavedTitle'),
-      message: t('create.toastSavedMessage'),
-      tone: 'success',
-    })
-
-    setInitialSerializedForm(JSON.stringify(mapDeckToForm(savedDeck)))
-    navigate('/browse')
+      setInitialSerializedForm(JSON.stringify(mapDeckToForm(savedDeck)))
+      navigate('/browse')
+    } catch (error) {
+      pushToast({
+        title: 'Unable to save deck',
+        message: error.message,
+        tone: 'danger',
+      })
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   function handleCancel() {
@@ -383,9 +394,9 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
           <button type="button" className="button button--secondary" onClick={handleCancel}>
             {t('common.cancel')}
           </button>
-          <button type="submit" className="button button--primary">
+          <button type="submit" className="button button--primary" disabled={isSaving}>
             <Save size={16} strokeWidth={2.2} />
-            {isEditing ? t('create.saveChanges') : t('create.saveDeck')}
+            {isSaving ? 'Saving...' : isEditing ? t('create.saveChanges') : t('create.saveDeck')}
           </button>
         </div>
       </form>
@@ -433,9 +444,34 @@ function CreateDeckPage() {
   const navigate = useNavigate()
   const { t } = useLanguage()
   const { deckId } = useParams()
-  const { getDeckById } = useDeckLibrary()
+  const { getDeckById, isLoading, loadError } = useDeckLibrary()
   const isEditing = Boolean(deckId)
   const existingDeck = deckId ? getDeckById(deckId) : null
+
+  if (isLoading) {
+    return (
+      <div className="page">
+        <section className="surface-panel empty-state">
+          <h1>Loading deck</h1>
+          <p>Fetching the selected deck from the local SQL database.</p>
+        </section>
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="page">
+        <section className="surface-panel empty-state">
+          <h1>Database unavailable</h1>
+          <p>{loadError}</p>
+          <button type="button" className="button button--primary" onClick={() => navigate('/browse')}>
+            Back to browse
+          </button>
+        </section>
+      </div>
+    )
+  }
 
   if (isEditing && !existingDeck) {
     return (
