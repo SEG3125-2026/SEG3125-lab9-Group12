@@ -1,12 +1,95 @@
+import { useEffect, useMemo, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useDeckLibrary } from '../context/DeckContext'
 import { formatShortDate } from '../utils/formatters'
+
+function hashString(value) {
+  let hash = 0
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(index)
+    hash |= 0
+  }
+
+  return Math.abs(hash)
+}
+
+function seededUnit(seed) {
+  const raw = Math.sin(seed) * 10000
+  return raw - Math.floor(raw)
+}
+
+function playCelebrationSound() {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext
+
+    if (!AudioContextClass) {
+      return
+    }
+
+    const audioContext = new AudioContextClass()
+    const noteSequence = [523.25, 659.25, 783.99]
+
+    noteSequence.forEach((frequency, index) => {
+      const startTime = audioContext.currentTime + index * 0.1
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+
+      oscillator.type = 'triangle'
+      oscillator.frequency.setValueAtTime(frequency, startTime)
+
+      gainNode.gain.setValueAtTime(0.0001, startTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.16, startTime + 0.03)
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.22)
+
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+
+      oscillator.start(startTime)
+      oscillator.stop(startTime + 0.24)
+    })
+
+    window.setTimeout(() => {
+      audioContext.close().catch(() => {})
+    }, 800)
+  } catch {
+    // Ignore audio errors (e.g., autoplay restrictions).
+  }
+}
 
 function ResultsPage() {
   const navigate = useNavigate()
   const { sessionId } = useParams()
   const { getDeckById, studySessions } = useDeckLibrary()
+  const hasPlayedCelebration = useRef(false)
   const session = studySessions.find((studySession) => studySession.id === sessionId)
+  const isPerfectScore = session?.accuracy === 100
+
+  const confettiPieces = useMemo(
+    () => {
+      const confettiColors = ['#a40e23', '#6b7280']
+      const baseSeed = hashString(sessionId || 'results')
+
+      return Array.from({ length: 34 }, (_, index) => ({
+        id: index,
+        color: confettiColors[Math.round(seededUnit(baseSeed + index * 17.11))],
+        x: `${seededUnit(baseSeed + index * 23.71) * 100}%`,
+        drift: `${seededUnit(baseSeed + index * 31.37) * 90 - 45}px`,
+        delay: `${seededUnit(baseSeed + index * 43.03) * 0.4}s`,
+        duration: `${1.6 + seededUnit(baseSeed + index * 59.21) * 1.4}s`,
+      }))
+    },
+    [sessionId],
+  )
+
+  useEffect(() => {
+    if (!isPerfectScore || hasPlayedCelebration.current) {
+      return
+    }
+
+    hasPlayedCelebration.current = true
+    playCelebrationSound()
+  }, [isPerfectScore])
 
   if (!session) {
     return (
@@ -31,6 +114,24 @@ function ResultsPage() {
 
   return (
     <div className="page">
+      {isPerfectScore ? (
+        <div className="confetti-overlay" aria-hidden="true">
+          {confettiPieces.map((piece) => (
+            <span
+              key={piece.id}
+              className="confetti-piece"
+              style={{
+                '--confetti-color': piece.color,
+                '--confetti-x': piece.x,
+                '--confetti-drift': piece.drift,
+                '--confetti-delay': piece.delay,
+                '--confetti-duration': piece.duration,
+              }}
+            />
+          ))}
+        </div>
+      ) : null}
+
       <section className="surface-panel results-hero">
         <div className="results-ring" style={{ '--score': `${session.accuracy}%` }}>
           <div>
@@ -41,7 +142,7 @@ function ResultsPage() {
 
         <div className="results-hero__content">
           <p className="section-tag">Analyzing Results</p>
-          <h1>Study session complete</h1>
+          <h2>Study session complete!</h2>
           <p>
             {session.deckTitle} finished on {formatShortDate(session.completedAt)} with{' '}
             {session.correctCount} correct answers out of {session.totalCards}.

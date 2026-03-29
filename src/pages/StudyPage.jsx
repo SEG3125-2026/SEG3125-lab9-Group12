@@ -29,11 +29,11 @@ function StudyPage() {
   const [revealed, setRevealed] = useState(false)
   const [answers, setAnswers] = useState({})
   const currentCard = deck?.cards[currentIndex] ?? null
-  const correctCount = Object.values(answers).filter((result) => result === 'right').length
+  const correctCount = Object.values(answers).filter((result) => result === 'correct').length
   const answeredCount = Object.keys(answers).length
   const currentCardResult = currentCard ? answers[currentCard.id] : null
   const progressValue = deck
-    ? Math.round((Math.max(answeredCount, currentIndex + 1) / deck.cards.length) * 100)
+    ? Math.min(99, Math.round((answeredCount / deck.cards.length) * 100))
     : 0
 
   const resetSession = useEffectEvent((nextDeck) => {
@@ -56,7 +56,7 @@ function StudyPage() {
       return
     }
 
-    const nextCorrectCount = Object.values(nextAnswers).filter((result) => result === 'right').length
+    const nextCorrectCount = Object.values(nextAnswers).filter((result) => result === 'correct').length
     const nextSession = recordStudySession({
       deckId: deck.id,
       deckTitle: deck.title,
@@ -147,14 +147,14 @@ function StudyPage() {
       return
     }
 
-    if ((event.key === '1' || event.key.toLowerCase() === 'w') && revealed) {
+    if ((event.key === 'w' || event.key.toLowerCase() === 'w') && revealed) {
       event.preventDefault()
       handleAnswer('wrong')
     }
 
-    if ((event.key === '2' || event.key.toLowerCase() === 'g') && revealed) {
+    if ((event.key === 'c' || event.key.toLowerCase() === 'c') && revealed) {
       event.preventDefault()
-      handleAnswer('right')
+      handleAnswer('correct')
     }
   })
 
@@ -204,13 +204,17 @@ function StudyPage() {
           </div>
         </div>
 
-        <ProgressBar label="Progress" helper={`${progressValue}% complete`} value={progressValue} />
+        <ProgressBar
+          label="Progress"
+          helper={`${progressValue}% complete`}
+          value={progressValue}
+        />
 
         <div className="shortcut-row">
-          <span className="shortcut-chip">Space: reveal</span>
-          <span className="shortcut-chip">1: wrong</span>
-          <span className="shortcut-chip">2: right</span>
-          <span className="shortcut-chip">R: repeat</span>
+          <span className="shortcut-chip">SPACE: reveal</span>
+          <span className="shortcut-chip">W: Wrong</span>
+          <span className="shortcut-chip">C: Correct</span>
+          <span className="shortcut-chip">R: Repeat</span>
         </div>
       </section>
 
@@ -232,10 +236,10 @@ function StudyPage() {
           {currentCardResult ? (
             <span
               className={
-                currentCardResult === 'right' ? 'badge badge--success' : 'badge badge--danger'
+                currentCardResult === 'correct' ? 'badge badge--success' : 'badge badge--danger'
               }
             >
-              Marked {currentCardResult === 'right' ? 'right' : 'wrong'}
+              Marked {currentCardResult === 'correct' ? 'correct' : 'wrong'}
             </span>
           ) : null}
         </article>
@@ -261,9 +265,9 @@ function StudyPage() {
                 <XCircle size={16} strokeWidth={2.2} />
                 Got it Wrong
               </button>
-              <button type="button" className="button button--success" onClick={() => handleAnswer('right')}>
+              <button type="button" className="button button--success" onClick={() => handleAnswer('correct')}>
                 <CheckCircle2 size={16} strokeWidth={2.2} />
-                Got it Right
+                Got it Correct
               </button>
             </div>
           )}

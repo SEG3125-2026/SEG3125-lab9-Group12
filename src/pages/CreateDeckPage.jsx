@@ -2,7 +2,6 @@ import { Plus, Save } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ConfirmDialog from '../components/ConfirmDialog'
-import FieldHint from '../components/FieldHint'
 import { useDeckLibrary } from '../context/DeckContext'
 import { useToast } from '../context/ToastContext'
 import { createId } from '../utils/createId'
@@ -50,14 +49,27 @@ function validateForm(form) {
     nextErrors.category = 'Pick a course or category to keep the knowledge organized.'
   }
 
+  if (!form.description.trim()) {
+    nextErrors.description = 'Add a short description so students know what this deck covers.'
+  }
+
   const meaningfulCards = form.cards.filter((card) => card.front.trim() || card.back.trim())
 
   if (meaningfulCards.length < 2) {
     nextErrors.cards = 'Add at least two flashcards so the study session has meaningful progression.'
   }
 
-  meaningfulCards.forEach((card) => {
-    if (!card.front.trim() || !card.back.trim()) {
+  form.cards.forEach((card) => {
+    const hasFront = Boolean(card.front.trim())
+    const hasBack = Boolean(card.back.trim())
+    const isEmpty = !hasFront && !hasBack
+
+    if ((hasFront || hasBack) && (!hasFront || !hasBack)) {
+      nextErrors.cardErrors[card.id] = 'Each flashcard needs both a front and a back.'
+      return
+    }
+
+    if (isEmpty && meaningfulCards.length < 2) {
       nextErrors.cardErrors[card.id] = 'Each flashcard needs both a front and a back.'
     }
   })
@@ -138,6 +150,7 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
     if (
       validationErrors.title ||
       validationErrors.category ||
+      validationErrors.description ||
       validationErrors.cards ||
       Object.keys(validationErrors.cardErrors).length > 0
     ) {
@@ -179,11 +192,12 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
   return (
     <>
       <form className="builder-layout" onSubmit={handleSave}>
-        <section className="surface-panel">
+        <section className="surface-panel builder-main builder-main--full">
           <div className="section-heading">
             <div>
               <p className="section-tag">Deck information</p>
               <h2>Set the basics first</h2>
+              <p>Please fill out the required fields below with the red asterisk *</p>
             </div>
             <div className="topics-header__actions">
               <span className="badge">{form.cards.length} draft cards</span>
@@ -193,9 +207,15 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
             </div>
           </div>
 
-          <label className="form-field">
+          <label className={errors.title ? 'form-field form-field--has-helper' : 'form-field'}>
             <span className="form-field__label">
-              Deck name <FieldHint text="Use a familiar course or topic label so it is easy to recognize later." />
+              Deck name
+              <span style={{ color: 'red' }}>*</span>
+              {errors.title ? (
+                <span className="field-hint field-hint--danger" tabIndex={0} aria-label={errors.title}>
+                  !
+                </span>
+              ) : null}
             </span>
             <input
               type="text"
@@ -203,12 +223,22 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
               onChange={(event) => updateField('title', event.target.value)}
               placeholder="e.g., Spanish Vocabulary"
             />
-            {errors.title ? <span className="form-field__error">{errors.title}</span> : null}
+            {errors.title ? (
+              <span className="form-field__helper-bubble" role="status" aria-live="polite">
+                {errors.title}
+              </span>
+            ) : null}
           </label>
 
-          <label className="form-field">
+          <label className={errors.category ? 'form-field form-field--has-helper' : 'form-field'}>
             <span className="form-field__label">
-              Category <FieldHint text="Categories support browsing, recognition, and future database filtering." />
+              Category
+              <span style={{ color: 'red' }}>*</span>
+              {errors.category ? (
+                <span className="field-hint field-hint--danger" tabIndex={0} aria-label={errors.category}>
+                  !
+                </span>
+              ) : null}
             </span>
             <input
               type="text"
@@ -216,12 +246,22 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
               onChange={(event) => updateField('category', event.target.value)}
               placeholder="e.g., Language, Science, History"
             />
-            {errors.category ? <span className="form-field__error">{errors.category}</span> : null}
+            {errors.category ? (
+              <span className="form-field__helper-bubble" role="status" aria-live="polite">
+                {errors.category}
+              </span>
+            ) : null}
           </label>
 
-          <label className="form-field">
+          <label className={errors.description ? 'form-field form-field--has-helper' : 'form-field'}>
             <span className="form-field__label">
-              Description <FieldHint text="Give enough context so students know what the deck covers before opening it." />
+              Description
+              <span style={{ color: 'red' }}>*</span>
+              {errors.description ? (
+                <span className="field-hint field-hint--danger" tabIndex={0} aria-label={errors.description}>
+                  !
+                </span>
+              ) : null}
             </span>
             <textarea
               rows="4"
@@ -229,6 +269,11 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
               onChange={(event) => updateField('description', event.target.value)}
               placeholder="Briefly explain what this deck helps students study."
             />
+            {errors.description ? (
+              <span className="form-field__helper-bubble" role="status" aria-live="polite">
+                {errors.description}
+              </span>
+            ) : null}
           </label>
         </section>
 
@@ -247,44 +292,87 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
           {errors.cards ? <p className="form-field__error">{errors.cards}</p> : null}
 
           <div className="builder-cards">
-            {form.cards.map((card, index) => (
-              <article key={card.id} className="flashcard-editor">
-                <div className="flashcard-editor__count">{index + 1}</div>
-                <div className="flashcard-editor__inputs">
-                  <label className="form-field">
-                    <span className="form-field__label">Front (question)</span>
-                    <input
-                      type="text"
-                      value={card.front}
-                      onChange={(event) => updateCard(card.id, 'front', event.target.value)}
-                      placeholder="Enter the question or term"
-                    />
-                  </label>
-                  <label className="form-field">
-                    <span className="form-field__label">Back (answer)</span>
-                    <input
-                      type="text"
-                      value={card.back}
-                      onChange={(event) => updateCard(card.id, 'back', event.target.value)}
-                      placeholder="Enter the answer or definition"
-                    />
-                  </label>
-                </div>
-                <button
-                  type="button"
-                  className="flashcard-editor__delete"
-                  onClick={() => deleteCard(card.id)}
-                  disabled={form.cards.length === 1}
+            {form.cards.map((card, index) => {
+              const hasCardError = Boolean(errors.cardErrors[card.id])
+              const missingFront = hasCardError && !card.front.trim()
+              const missingBack = hasCardError && !card.back.trim()
+
+              return (
+                <article
+                  key={card.id}
+                  className={hasCardError ? 'flashcard-editor flashcard-editor--error' : 'flashcard-editor'}
                 >
-                  Remove
-                </button>
-                {errors.cardErrors[card.id] ? (
-                  <p className="form-field__error form-field__error--inline">
-                    {errors.cardErrors[card.id]}
-                  </p>
-                ) : null}
-              </article>
-            ))}
+                  <div className="flashcard-editor__count">{index + 1}</div>
+                  <div className="flashcard-editor__inputs">
+                    <label className={missingFront ? 'form-field form-field--has-helper' : 'form-field'}>
+                      <span className="form-field__label">
+                        Front (question)
+                        {missingFront ? (
+                          <span
+                            className="field-hint field-hint--danger"
+                            tabIndex={0}
+                            aria-label="Front side is required"
+                          >
+                            !
+                          </span>
+                        ) : null}
+                      </span>
+                      <input
+                        type="text"
+                        value={card.front}
+                        onChange={(event) => updateCard(card.id, 'front', event.target.value)}
+                        aria-invalid={missingFront}
+                        placeholder="Enter the question or term"
+                      />
+                      {missingFront ? (
+                        <span className="form-field__helper-bubble" role="status" aria-live="polite">
+                          Front side is required.
+                        </span>
+                      ) : null}
+                    </label>
+                    <label className={missingBack ? 'form-field form-field--has-helper' : 'form-field'}>
+                      <span className="form-field__label">
+                        Back (answer)
+                        {missingBack ? (
+                          <span
+                            className="field-hint field-hint--danger"
+                            tabIndex={0}
+                            aria-label="Back side is required"
+                          >
+                            !
+                          </span>
+                        ) : null}
+                      </span>
+                      <input
+                        type="text"
+                        value={card.back}
+                        onChange={(event) => updateCard(card.id, 'back', event.target.value)}
+                        aria-invalid={missingBack}
+                        placeholder="Enter the answer or definition"
+                      />
+                      {missingBack ? (
+                        <span className="form-field__helper-bubble" role="status" aria-live="polite">
+                          Back side is required.
+                        </span>
+                      ) : null}
+                    </label>
+                  </div>
+                  <button
+                    type="button"
+                    className="flashcard-editor__delete"
+                    onClick={() => deleteCard(card.id)}
+                    disabled={form.cards.length === 1}
+                  >
+                    Remove
+                  </button>
+                  {errors.cardErrors[card.id] ? (
+                    <p className="form-field__error form-field__error--inline">
+                      {errors.cardErrors[card.id]}
+                    </p>
+                  ) : null}
+                </article>
+              )
+            })}
           </div>
         </section>
 
@@ -361,7 +449,7 @@ function CreateDeckPage() {
 
   return (
     <div className="page">
-      <section className="surface-panel page-header">
+      <section className="page-header">
         <p className="section-tag">{isEditing ? 'Edit Deck' : 'Create Deck'}</p>
         <h1>{isEditing ? 'Edit deck' : 'Create new deck'}</h1>
         <p>

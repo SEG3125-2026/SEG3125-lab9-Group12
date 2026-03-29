@@ -1,4 +1,4 @@
-import { Search } from 'lucide-react'
+import { Search, ChevronDown } from 'lucide-react'
 import { useDeferredValue, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -13,6 +13,7 @@ function BrowsePage() {
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [deckToDelete, setDeckToDelete] = useState(null)
+  const [showStats, setShowStats] = useState(false)
   const deferredSearch = useDeferredValue(search)
 
   const categories = ['All', ...new Set(decks.map((deck) => deck.category))]
@@ -65,7 +66,7 @@ function BrowsePage() {
 
   return (
     <div className="page">
-      <section className="surface-panel page-header">
+      <section className="page-header">
         <p className="section-tag">Discover</p>
         <h1>Browse decks</h1>
         <p>
@@ -102,6 +103,24 @@ function BrowsePage() {
         </div>
       </section>
 
+      <article>
+            <h2>Library Overview</h2>
+          <div className="hero-stats hero-stats--compact">
+            <div>
+              <strong>{decks.length}</strong>
+              <span>available decks</span>
+            </div>
+            <div>
+              <strong>{categories.length - 1}</strong>
+              <span>course categories</span>
+            </div>
+            <div>
+              <strong>{filteredDecks.length}</strong>
+              <span>matching current filters</span>
+            </div>
+          </div>
+        </article>
+        
       <section className="surface-panel">
         <div className="section-heading">
           <div>
@@ -131,7 +150,24 @@ function BrowsePage() {
         )}
       </section>
 
-      <section className="split-section">
+      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <button
+          type="button"
+          className="button button--secondary"
+          onClick={() => setShowStats(!showStats)}
+        >
+          <ChevronDown
+            size={18}
+            strokeWidth={2.2}
+            style={{ transform: showStats ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 200ms ease' }}
+            aria-hidden="true"
+          />
+          {showStats ? 'Hide Recent Activities' : 'View Recent Activities'}
+        </button>
+      </div>
+
+      {showStats && (
+        <>
         <article className="surface-panel">
           <div className="section-heading">
             <div>
@@ -157,26 +193,8 @@ function BrowsePage() {
             <p className="empty-copy">Open or study a deck and it will appear here automatically.</p>
           )}
         </article>
-
-        <article className="surface-panel">
-          <p className="section-tag">Overview</p>
-          <h2>Library overview</h2>
-          <div className="hero-stats hero-stats--compact">
-            <div>
-              <strong>{decks.length}</strong>
-              <span>available decks</span>
-            </div>
-            <div>
-              <strong>{categories.length - 1}</strong>
-              <span>course categories</span>
-            </div>
-            <div>
-              <strong>{filteredDecks.length}</strong>
-              <span>matching current filters</span>
-            </div>
-          </div>
-        </article>
-      </section>
+        </>
+      )}
 
       <ConfirmDialog
         open={Boolean(deckToDelete)}
