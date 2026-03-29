@@ -4,23 +4,27 @@ import { useNavigate } from 'react-router-dom'
 import ConfirmDialog from '../components/ConfirmDialog'
 import DeckCard from '../components/DeckCard'
 import { useDeckLibrary } from '../context/DeckContext'
+import { useLanguage } from '../context/LanguageContext'
 import { useToast } from '../context/ToastContext'
+
+const ALL_CATEGORIES = '__all__'
 
 function BrowsePage() {
   const navigate = useNavigate()
   const { decks, recentDecks, deleteDeck, recordDeckAccess, restoreDeck } = useDeckLibrary()
+  const { t } = useLanguage()
   const { pushToast } = useToast()
   const [search, setSearch] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('All')
+  const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORIES)
   const [deckToDelete, setDeckToDelete] = useState(null)
   const [showStats, setShowStats] = useState(false)
   const deferredSearch = useDeferredValue(search)
 
-  const categories = ['All', ...new Set(decks.map((deck) => deck.category))]
+  const categories = [ALL_CATEGORIES, ...new Set(decks.map((deck) => deck.category))]
   const trimmedSearch = deferredSearch.trim().toLowerCase()
 
   const filteredDecks = decks.filter((deck) => {
-    const matchesCategory = selectedCategory === 'All' || deck.category === selectedCategory
+    const matchesCategory = selectedCategory === ALL_CATEGORIES || deck.category === selectedCategory
 
     if (!trimmedSearch) {
       return matchesCategory
@@ -56,10 +60,10 @@ function BrowsePage() {
     }
 
     pushToast({
-      title: 'Deck deleted',
-      message: 'Undo is available for a few seconds if this was accidental.',
+      title: t('browse.toastDeckDeletedTitle'),
+      message: t('browse.toastDeckDeletedMessage'),
       tone: 'danger',
-      actionLabel: 'Undo',
+      actionLabel: t('common.undo'),
       onAction: () => restoreDeck(deletedDeck),
     })
   }
@@ -67,12 +71,9 @@ function BrowsePage() {
   return (
     <div className="page">
       <section className="page-header">
-        <p className="section-tag">Discover</p>
-        <h1>Browse decks</h1>
-        <p>
-          Search by name, description, category, or card content. Recently viewed decks stay visible
-          so students do not need to remember exact titles.
-        </p>
+        <p className="section-tag">{t('browse.discover')}</p>
+        <h1>{t('browse.title')}</h1>
+        <p>{t('browse.description')}</p>
       </section>
 
       <section className="surface-panel">
@@ -83,7 +84,7 @@ function BrowsePage() {
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search decks by name, description, category, or concept..."
+            placeholder={t('browse.searchPlaceholder')}
           />
         </label>
 
@@ -97,26 +98,26 @@ function BrowsePage() {
               }
               onClick={() => setSelectedCategory(category)}
             >
-              {category}
+              {category === ALL_CATEGORIES ? t('common.all') : category}
             </button>
           ))}
         </div>
       </section>
 
       <article>
-            <h2>Library Overview</h2>
+            <h2>{t('browse.libraryOverview')}</h2>
           <div className="hero-stats hero-stats--compact">
             <div>
               <strong>{decks.length}</strong>
-              <span>available decks</span>
+              <span>{t('browse.availableDecks')}</span>
             </div>
             <div>
               <strong>{categories.length - 1}</strong>
-              <span>course categories</span>
+              <span>{t('browse.courseCategories')}</span>
             </div>
             <div>
               <strong>{filteredDecks.length}</strong>
-              <span>matching current filters</span>
+              <span>{t('browse.matchingCurrentFilters')}</span>
             </div>
           </div>
         </article>
@@ -124,10 +125,10 @@ function BrowsePage() {
       <section className="surface-panel">
         <div className="section-heading">
           <div>
-            <p className="section-tag">Deck Library</p>
-            <h2>Decks</h2>
+            <p className="section-tag">{t('browse.deckLibrary')}</p>
+            <h2>{t('browse.decks')}</h2>
           </div>
-          <span className="badge">{filteredDecks.length} shown</span>
+          <span className="badge">{filteredDecks.length} {t('browse.shown')}</span>
         </div>
 
         {filteredDecks.length > 0 ? (
@@ -144,8 +145,8 @@ function BrowsePage() {
           </div>
         ) : (
           <div className="empty-state">
-            <h3>No decks match that search</h3>
-            <p>Clear the current filters or create a new deck to keep building your study library.</p>
+            <h3>{t('browse.noDecksMatch')}</h3>
+            <p>{t('browse.noDecksMatchBody')}</p>
           </div>
         )}
       </section>
@@ -162,7 +163,7 @@ function BrowsePage() {
             style={{ transform: showStats ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 200ms ease' }}
             aria-hidden="true"
           />
-          {showStats ? 'Hide Recent Activities' : 'View Recent Activities'}
+          {showStats ? t('browse.hideRecentActivities') : t('browse.viewRecentActivities')}
         </button>
       </div>
 
@@ -171,8 +172,8 @@ function BrowsePage() {
         <article className="surface-panel">
           <div className="section-heading">
             <div>
-              <p className="section-tag">Recent Activity</p>
-              <h2>Recently viewed decks</h2>
+              <p className="section-tag">{t('browse.recentActivity')}</p>
+              <h2>{t('browse.recentlyViewedDecks')}</h2>
             </div>
           </div>
 
@@ -190,7 +191,7 @@ function BrowsePage() {
               ))}
             </div>
           ) : (
-            <p className="empty-copy">Open or study a deck and it will appear here automatically.</p>
+            <p className="empty-copy">{t('browse.recentEmpty')}</p>
           )}
         </article>
         </>
@@ -198,9 +199,9 @@ function BrowsePage() {
 
       <ConfirmDialog
         open={Boolean(deckToDelete)}
-        title="Delete this deck?"
-        body="This permanently removes the deck from your library unless you immediately undo the action."
-        confirmLabel="Delete deck"
+        title={t('browse.deleteDeckTitle')}
+        body={t('browse.deleteDeckBody')}
+        confirmLabel={t('browse.deleteDeckConfirm')}
         onConfirm={() => {
           handleDelete(deckToDelete.id)
           setDeckToDelete(null)

@@ -3,6 +3,7 @@ import { useEffect, useEffectEvent, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ProgressBar from '../components/ProgressBar'
 import { useDeckLibrary } from '../context/DeckContext'
+import { useLanguage } from '../context/LanguageContext'
 
 function findNextIndex(cards, answers, currentIndex) {
   for (let index = currentIndex + 1; index < cards.length; index += 1) {
@@ -22,6 +23,7 @@ function findNextIndex(cards, answers, currentIndex) {
 
 function StudyPage() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const { deckId } = useParams()
   const { getDeckById, recordDeckAccess, recordStudySession } = useDeckLibrary()
   const deck = getDeckById(deckId)
@@ -167,10 +169,10 @@ function StudyPage() {
     return (
       <div className="page">
         <section className="surface-panel empty-state">
-          <h1>Study session unavailable</h1>
-          <p>This deck could not be found. Return to the library and start another session.</p>
+          <h1>{t('study.unavailableTitle')}</h1>
+          <p>{t('study.unavailableBody')}</p>
           <button type="button" className="button button--primary" onClick={() => navigate('/browse')}>
-            Back to browse
+            {t('common.backToBrowse')}
           </button>
         </section>
       </div>
@@ -182,21 +184,21 @@ function StudyPage() {
       <section className="surface-panel study-header">
         <button type="button" className="button button--secondary" onClick={() => navigate('/browse')}>
           <ArrowLeft size={16} strokeWidth={2.2} />
-          Back to Decks
+          {t('study.backToDecks')}
         </button>
         <div className="study-header__content">
           <div>
-            <p className="section-tag">Absorb Information</p>
+            <p className="section-tag">{t('study.tag')}</p>
             <h1>{deck.title}</h1>
             <p>{deck.description}</p>
           </div>
           <div className="score-panel">
             <div>
-              <span>Correct</span>
+              <span>{t('study.correct')}</span>
               <strong>{correctCount}</strong>
             </div>
             <div>
-              <span>Cards</span>
+              <span>{t('study.cards')}</span>
               <strong>
                 {currentIndex + 1}/{deck.cards.length}
               </strong>
@@ -205,16 +207,16 @@ function StudyPage() {
         </div>
 
         <ProgressBar
-          label="Progress"
-          helper={`${progressValue}% complete`}
+          label={t('study.progress')}
+          helper={`${progressValue}% ${t('study.complete')}`}
           value={progressValue}
         />
 
         <div className="shortcut-row">
-          <span className="shortcut-chip">SPACE: reveal</span>
-          <span className="shortcut-chip">W: Wrong</span>
-          <span className="shortcut-chip">C: Correct</span>
-          <span className="shortcut-chip">R: Repeat</span>
+          <span className="shortcut-chip">{t('study.shortcutReveal')}</span>
+          <span className="shortcut-chip">{t('study.shortcutWrong')}</span>
+          <span className="shortcut-chip">{t('study.shortcutCorrect')}</span>
+          <span className="shortcut-chip">{t('study.shortcutRepeat')}</span>
         </div>
       </section>
 
@@ -230,16 +232,16 @@ function StudyPage() {
             }
           }}
         >
-          <div className="study-card__label">{revealed ? 'Answer' : 'Question'}</div>
+          <div className="study-card__label">{revealed ? t('study.answer') : t('study.question')}</div>
           <h2>{revealed ? currentCard.back : currentCard.front}</h2>
-          {!revealed ? <p>Click or press space to reveal answer</p> : null}
+          {!revealed ? <p>{t('study.revealHint')}</p> : null}
           {currentCardResult ? (
             <span
               className={
                 currentCardResult === 'correct' ? 'badge badge--success' : 'badge badge--danger'
               }
             >
-              Marked {currentCardResult === 'correct' ? 'correct' : 'wrong'}
+              {t('study.marked')} {currentCardResult === 'correct' ? t('study.markedCorrect') : t('study.markedWrong')}
             </span>
           ) : null}
         </article>
@@ -251,30 +253,30 @@ function StudyPage() {
             disabled={currentIndex === 0}
             onClick={handlePrevious}
           >
-            Previous
+            {t('study.previous')}
           </button>
 
           {!revealed ? (
             <button type="button" className="button button--primary" onClick={() => setRevealed(true)}>
               <Eye size={16} strokeWidth={2.2} />
-              Reveal Answer
+              {t('study.revealAnswer')}
             </button>
           ) : (
             <div className="study-actions__answer-group">
               <button type="button" className="button button--danger-ghost" onClick={() => handleAnswer('wrong')}>
                 <XCircle size={16} strokeWidth={2.2} />
-                Got it Wrong
+                {t('study.gotWrong')}
               </button>
               <button type="button" className="button button--success" onClick={() => handleAnswer('correct')}>
                 <CheckCircle2 size={16} strokeWidth={2.2} />
-                Got it Correct
+                {t('study.gotCorrect')}
               </button>
             </div>
           )}
 
           <button type="button" className="button button--secondary" onClick={handleRepeat}>
             <RefreshCw size={16} strokeWidth={2.2} />
-            Repeat
+            {t('study.repeat')}
           </button>
         </div>
       </section>

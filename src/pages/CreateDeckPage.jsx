@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { useDeckLibrary } from '../context/DeckContext'
+import { useLanguage } from '../context/LanguageContext'
 import { useToast } from '../context/ToastContext'
 import { createId } from '../utils/createId'
 
@@ -36,27 +37,27 @@ function mapDeckToForm(deck) {
   }
 }
 
-function validateForm(form) {
+function validateForm(form, t) {
   const nextErrors = {
     cardErrors: {},
   }
 
   if (!form.title.trim()) {
-    nextErrors.title = 'Enter a deck name so the deck is recognizable in the library.'
+    nextErrors.title = t('create.validationTitle')
   }
 
   if (!form.category.trim()) {
-    nextErrors.category = 'Pick a course or category to keep the knowledge organized.'
+    nextErrors.category = t('create.validationCategory')
   }
 
   if (!form.description.trim()) {
-    nextErrors.description = 'Add a short description so students know what this deck covers.'
+    nextErrors.description = t('create.validationDescription')
   }
 
   const meaningfulCards = form.cards.filter((card) => card.front.trim() || card.back.trim())
 
   if (meaningfulCards.length < 2) {
-    nextErrors.cards = 'Add at least two flashcards so the study session has meaningful progression.'
+    nextErrors.cards = t('create.validationCards')
   }
 
   form.cards.forEach((card) => {
@@ -65,12 +66,12 @@ function validateForm(form) {
     const isEmpty = !hasFront && !hasBack
 
     if ((hasFront || hasBack) && (!hasFront || !hasBack)) {
-      nextErrors.cardErrors[card.id] = 'Each flashcard needs both a front and a back.'
+      nextErrors.cardErrors[card.id] = t('create.validationCardSide')
       return
     }
 
     if (isEmpty && meaningfulCards.length < 2) {
-      nextErrors.cardErrors[card.id] = 'Each flashcard needs both a front and a back.'
+      nextErrors.cardErrors[card.id] = t('create.validationCardSide')
     }
   })
 
@@ -80,6 +81,7 @@ function validateForm(form) {
 function DeckEditor({ deckId, existingDeck, isEditing }) {
   const navigate = useNavigate()
   const { createDeck, updateDeck } = useDeckLibrary()
+  const { t } = useLanguage()
   const { pushToast } = useToast()
   const initialForm = existingDeck ? mapDeckToForm(existingDeck) : createEmptyForm()
   const initialSerialized = JSON.stringify(initialForm)
@@ -118,10 +120,10 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
       }
 
       pushToast({
-        title: 'Flashcard removed',
-        message: 'Undo to recover the deleted card without retyping it.',
+        title: t('create.toastFlashcardRemovedTitle'),
+        message: t('create.toastFlashcardRemovedMessage'),
         tone: 'info',
-        actionLabel: 'Undo',
+        actionLabel: t('common.undo'),
         onAction: () => {
           setForm((latestForm) => {
             const nextCards = [...latestForm.cards]
@@ -144,7 +146,7 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
   function handleSave(event) {
     event.preventDefault()
 
-    const validationErrors = validateForm(form)
+    const validationErrors = validateForm(form, t)
     setErrors(validationErrors)
 
     if (
@@ -155,8 +157,8 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
       Object.keys(validationErrors.cardErrors).length > 0
     ) {
       pushToast({
-        title: 'Fix the highlighted fields',
-        message: 'The builder keeps incomplete cards from being saved to prevent study errors.',
+        title: t('create.toastFixTitle'),
+        message: t('create.toastFixMessage'),
         tone: 'danger',
       })
       return
@@ -171,8 +173,8 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
     const savedDeck = isEditing ? updateDeck(deckId, nextDeck) : createDeck(nextDeck)
 
     pushToast({
-      title: isEditing ? 'Deck updated' : 'Deck saved',
-      message: 'Your deck is ready for browsing and study sessions.',
+      title: isEditing ? t('create.toastUpdatedTitle') : t('create.toastSavedTitle'),
+      message: t('create.toastSavedMessage'),
       tone: 'success',
     })
 
@@ -195,21 +197,21 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
         <section className="surface-panel builder-main builder-main--full">
           <div className="section-heading">
             <div>
-              <p className="section-tag">Deck information</p>
-              <h2>Set the basics first</h2>
-              <p>Please fill out the required fields below with the red asterisk *</p>
+              <p className="section-tag">{t('create.deckInfoTag')}</p>
+              <h2>{t('create.deckInfoTitle')}</h2>
+              <p>{t('create.requiredNote')}</p>
             </div>
             <div className="topics-header__actions">
-              <span className="badge">{form.cards.length} draft cards</span>
+              <span className="badge">{form.cards.length} {t('create.draftCards')}</span>
               <button type="button" className="button button--primary" onClick={() => setShowTipsModal(true)}>
-                View Builder Tips
+                {t('create.viewTips')}
               </button>
             </div>
           </div>
 
           <label className={errors.title ? 'form-field form-field--has-helper' : 'form-field'}>
             <span className="form-field__label">
-              Deck name
+              {t('create.deckName')}
               <span style={{ color: 'red' }}>*</span>
               {errors.title ? (
                 <span className="field-hint field-hint--danger" tabIndex={0} aria-label={errors.title}>
@@ -221,7 +223,7 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
               type="text"
               value={form.title}
               onChange={(event) => updateField('title', event.target.value)}
-              placeholder="e.g., Spanish Vocabulary"
+              placeholder={t('create.deckNamePlaceholder')}
             />
             {errors.title ? (
               <span className="form-field__helper-bubble" role="status" aria-live="polite">
@@ -232,7 +234,7 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
 
           <label className={errors.category ? 'form-field form-field--has-helper' : 'form-field'}>
             <span className="form-field__label">
-              Category
+              {t('create.category')}
               <span style={{ color: 'red' }}>*</span>
               {errors.category ? (
                 <span className="field-hint field-hint--danger" tabIndex={0} aria-label={errors.category}>
@@ -244,7 +246,7 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
               type="text"
               value={form.category}
               onChange={(event) => updateField('category', event.target.value)}
-              placeholder="e.g., Language, Science, History"
+              placeholder={t('create.categoryPlaceholder')}
             />
             {errors.category ? (
               <span className="form-field__helper-bubble" role="status" aria-live="polite">
@@ -255,7 +257,7 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
 
           <label className={errors.description ? 'form-field form-field--has-helper' : 'form-field'}>
             <span className="form-field__label">
-              Description
+              {t('create.description')}
               <span style={{ color: 'red' }}>*</span>
               {errors.description ? (
                 <span className="field-hint field-hint--danger" tabIndex={0} aria-label={errors.description}>
@@ -267,7 +269,7 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
               rows="4"
               value={form.description}
               onChange={(event) => updateField('description', event.target.value)}
-              placeholder="Briefly explain what this deck helps students study."
+              placeholder={t('create.descriptionPlaceholder')}
             />
             {errors.description ? (
               <span className="form-field__helper-bubble" role="status" aria-live="polite">
@@ -280,12 +282,12 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
         <section className="surface-panel builder-main">
           <div className="section-heading">
             <div>
-              <p className="section-tag">Flashcards</p>
-              <h2>Write clear prompts and concise answers</h2>
+              <p className="section-tag">{t('create.flashcardsTag')}</p>
+              <h2>{t('create.flashcardsTitle')}</h2>
             </div>
             <button type="button" className="button button--secondary" onClick={addCard}>
               <Plus size={16} strokeWidth={2.2} />
-              Add Card
+              {t('create.addCard')}
             </button>
           </div>
 
@@ -306,12 +308,12 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
                   <div className="flashcard-editor__inputs">
                     <label className={missingFront ? 'form-field form-field--has-helper' : 'form-field'}>
                       <span className="form-field__label">
-                        Front (question)
+                        {t('create.frontLabel')}
                         {missingFront ? (
                           <span
                             className="field-hint field-hint--danger"
                             tabIndex={0}
-                            aria-label="Front side is required"
+                            aria-label={t('create.validationFrontRequired')}
                           >
                             !
                           </span>
@@ -322,22 +324,22 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
                         value={card.front}
                         onChange={(event) => updateCard(card.id, 'front', event.target.value)}
                         aria-invalid={missingFront}
-                        placeholder="Enter the question or term"
+                        placeholder={t('create.frontPlaceholder')}
                       />
                       {missingFront ? (
                         <span className="form-field__helper-bubble" role="status" aria-live="polite">
-                          Front side is required.
+                          {t('create.validationFrontRequired')}
                         </span>
                       ) : null}
                     </label>
                     <label className={missingBack ? 'form-field form-field--has-helper' : 'form-field'}>
                       <span className="form-field__label">
-                        Back (answer)
+                        {t('create.backLabel')}
                         {missingBack ? (
                           <span
                             className="field-hint field-hint--danger"
                             tabIndex={0}
-                            aria-label="Back side is required"
+                            aria-label={t('create.validationBackRequired')}
                           >
                             !
                           </span>
@@ -348,11 +350,11 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
                         value={card.back}
                         onChange={(event) => updateCard(card.id, 'back', event.target.value)}
                         aria-invalid={missingBack}
-                        placeholder="Enter the answer or definition"
+                        placeholder={t('create.backPlaceholder')}
                       />
                       {missingBack ? (
                         <span className="form-field__helper-bubble" role="status" aria-live="polite">
-                          Back side is required.
+                          {t('create.validationBackRequired')}
                         </span>
                       ) : null}
                     </label>
@@ -363,7 +365,7 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
                     onClick={() => deleteCard(card.id)}
                     disabled={form.cards.length === 1}
                   >
-                    Remove
+                    {t('create.remove')}
                   </button>
                   {errors.cardErrors[card.id] ? (
                     <p className="form-field__error form-field__error--inline">
@@ -378,20 +380,20 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
 
         <div className="builder-actions">
           <button type="button" className="button button--secondary" onClick={handleCancel}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button type="submit" className="button button--primary">
             <Save size={16} strokeWidth={2.2} />
-            {isEditing ? 'Save Changes' : 'Save Deck'}
+            {isEditing ? t('create.saveChanges') : t('create.saveDeck')}
           </button>
         </div>
       </form>
 
       <ConfirmDialog
         open={showLeaveDialog}
-        title="Discard your changes?"
-        body="Leaving this page now will remove any unsaved edits in the deck builder."
-        confirmLabel="Discard changes"
+        title={t('create.discardTitle')}
+        body={t('create.discardBody')}
+        confirmLabel={t('create.discardConfirm')}
         tone="danger"
         onConfirm={() => navigate('/browse')}
         onCancel={() => setShowLeaveDialog(false)}
@@ -406,17 +408,17 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
             aria-labelledby="builder-tips-title"
             onClick={(event) => event.stopPropagation()}
           >
-            <p className="section-tag">Builder Tips</p>
-            <h2 id="builder-tips-title">Make each card easy to review</h2>
+            <p className="section-tag">{t('create.tipsTag')}</p>
+            <h2 id="builder-tips-title">{t('create.tipsTitle')}</h2>
             <ul className="checklist checklist--dialog">
-              <li>Keep one idea or definition per card so answers stay short and memorable.</li>
-              <li>Use familiar course names or topics to make decks easier to find later.</li>
-              <li>Write prompts that are specific enough to avoid vague guesses.</li>
-              <li>If you remove a card by mistake, use undo from the toast message right away.</li>
+              <li>{t('create.tip1')}</li>
+              <li>{t('create.tip2')}</li>
+              <li>{t('create.tip3')}</li>
+              <li>{t('create.tip4')}</li>
             </ul>
             <div className="dialog__actions">
               <button type="button" className="button button--primary" onClick={() => setShowTipsModal(false)}>
-                Close
+                {t('common.close')}
               </button>
             </div>
           </section>
@@ -428,6 +430,7 @@ function DeckEditor({ deckId, existingDeck, isEditing }) {
 
 function CreateDeckPage() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const { deckId } = useParams()
   const { getDeckById } = useDeckLibrary()
   const isEditing = Boolean(deckId)
@@ -437,10 +440,10 @@ function CreateDeckPage() {
     return (
       <div className="page">
         <section className="surface-panel empty-state">
-          <h1>Deck not found</h1>
-          <p>The deck you tried to edit is missing. Return to the library and choose another deck.</p>
+          <h1>{t('create.deckNotFoundTitle')}</h1>
+          <p>{t('create.deckNotFoundBody')}</p>
           <button type="button" className="button button--primary" onClick={() => navigate('/browse')}>
-            Back to browse
+            {t('create.backToBrowse')}
           </button>
         </section>
       </div>
@@ -450,12 +453,9 @@ function CreateDeckPage() {
   return (
     <div className="page">
       <section className="page-header">
-        <p className="section-tag">{isEditing ? 'Edit Deck' : 'Create Deck'}</p>
-        <h1>{isEditing ? 'Edit deck' : 'Create new deck'}</h1>
-        <p>
-          Build a custom flashcard deck with structured fields, helpful prompts, and validation that
-          prevents incomplete cards from reaching study mode.
-        </p>
+        <p className="section-tag">{isEditing ? t('create.editTag') : t('create.createTag')}</p>
+        <h1>{isEditing ? t('create.editTitle') : t('create.createTitle')}</h1>
+        <p>{t('create.pageDescription')}</p>
       </section>
 
       <DeckEditor

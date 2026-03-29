@@ -1,5 +1,6 @@
 import { BarChart3, BookOpen, Brain, FolderOpen, HardDrive, Search, Layers3, Sparkles, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
+import { useLanguage } from '../context/LanguageContext'
 
 
 const highlightCards = ['Recently viewed decks', 'Quick card builder', 'Focused review mode', 'Session results']
@@ -69,16 +70,14 @@ const semanticConcepts = [
 
 function AboutPage() {
   const [showDetails, setShowDetails] = useState(false)
+  const { t } = useLanguage()
 
   return (
     <div className="page">
       <section className="page-header page-header--centered">
-        <p className="section-tag">About uoDecks</p>
-        <h1>About uOttawa FlashCards</h1>
-        <p>
-          The platform supports students who need to create, browse, study, and evaluate their
-          learning materials while keeping the interface consistent and easy to understand.
-        </p>
+        <p className="section-tag">{t('about.tag')}</p>
+        <h1>{t('about.title')}</h1>
+        <p>{t('about.description')}</p>
       </section>
 
       <section className="card-grid">
@@ -105,7 +104,7 @@ function AboutPage() {
             style={{ transform: showDetails ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 200ms ease' }}
             aria-hidden="true"
           />
-          {showDetails ? 'Show Less' : 'Learn More'}
+          {showDetails ? t('about.showLess') : t('about.learnMore')}
         </button>
       </div>
 

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useDeckLibrary } from '../context/DeckContext'
+import { useLanguage } from '../context/LanguageContext'
 import { formatShortDate } from '../utils/formatters'
 
 function hashString(value) {
@@ -59,6 +60,7 @@ function playCelebrationSound() {
 
 function ResultsPage() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const { sessionId } = useParams()
   const { getDeckById, studySessions } = useDeckLibrary()
   const hasPlayedCelebration = useRef(false)
@@ -95,10 +97,10 @@ function ResultsPage() {
     return (
       <div className="page">
         <section className="surface-panel empty-state">
-          <h1>Results unavailable</h1>
-          <p>This study summary is missing. Start a new session to generate fresh results.</p>
+          <h1>{t('results.unavailableTitle')}</h1>
+          <p>{t('results.unavailableBody')}</p>
           <button type="button" className="button button--primary" onClick={() => navigate('/browse')}>
-            Browse decks
+            {t('nav.browse')}
           </button>
         </section>
       </div>
@@ -136,46 +138,46 @@ function ResultsPage() {
         <div className="results-ring" style={{ '--score': `${session.accuracy}%` }}>
           <div>
             <strong>{session.accuracy}%</strong>
-            <span>accuracy</span>
+            <span>{t('results.accuracy')}</span>
           </div>
         </div>
 
         <div className="results-hero__content">
-          <p className="section-tag">Analyzing Results</p>
-          <h2>Study session complete!</h2>
+          <p className="section-tag">{t('results.tag')}</p>
+          <h2>{t('results.title')}</h2>
           <p>
-            {session.deckTitle} finished on {formatShortDate(session.completedAt)} with{' '}
-            {session.correctCount} correct answers out of {session.totalCards}.
+            {session.deckTitle} {t('results.finishedOn')} {formatShortDate(session.completedAt)} {t('results.with')}{' '}
+            {session.correctCount} {t('results.correctAnswersOutOf')} {session.totalCards}.
           </p>
 
           <div className="hero-stats hero-stats--compact">
             <div>
               <strong>{session.correctCount}</strong>
-              <span>correct</span>
+              <span>{t('results.correct')}</span>
             </div>
             <div>
               <strong>{session.incorrectCount}</strong>
-              <span>need review</span>
+              <span>{t('results.needReview')}</span>
             </div>
             <div>
-              <strong>{accuracyDelta === null ? 'New' : `${accuracyDelta >= 0 ? '+' : ''}${accuracyDelta}%`}</strong>
-              <span>{accuracyDelta === null ? 'first recorded attempt' : 'change from last attempt'}</span>
+              <strong>{accuracyDelta === null ? t('results.new') : `${accuracyDelta >= 0 ? '+' : ''}${accuracyDelta}%`}</strong>
+              <span>{accuracyDelta === null ? t('results.firstAttempt') : t('results.changeFromLast')}</span>
             </div>
           </div>
 
           <div className="results-actions">
             {deck ? (
               <button type="button" className="button button--primary" onClick={() => navigate(`/study/${deck.id}`)}>
-                Study Again
+                {t('results.studyAgain')}
               </button>
             ) : null}
             {deck ? (
               <button type="button" className="button button--secondary" onClick={() => navigate(`/edit/${deck.id}`)}>
-                Edit Deck
+                {t('results.editDeck')}
               </button>
             ) : null}
             <button type="button" className="button button--secondary" onClick={() => navigate('/browse')}>
-              Back to Browse
+              {t('common.backToBrowse')}
             </button>
           </div>
         </div>
@@ -183,8 +185,8 @@ function ResultsPage() {
 
       <section className="split-section">
         <article className="surface-panel">
-          <p className="section-tag">What to Review</p>
-          <h2>Cards that still need work</h2>
+          <p className="section-tag">{t('results.whatToReview')}</p>
+          <h2>{t('results.cardsNeedWork')}</h2>
           {missedCards.length > 0 ? (
             <div className="results-list">
               {missedCards.map((response) => (
@@ -195,13 +197,13 @@ function ResultsPage() {
               ))}
             </div>
           ) : (
-            <p className="empty-copy">Perfect round. No missed cards in this session.</p>
+            <p className="empty-copy">{t('results.perfectRound')}</p>
           )}
         </article>
 
         <article className="surface-panel">
-          <p className="section-tag">Response Breakdown</p>
-          <h2>Every studied card</h2>
+          <p className="section-tag">{t('results.responseBreakdown')}</p>
+          <h2>{t('results.everyCard')}</h2>
           <div className="results-list">
             {session.responses.map((response) => (
               <article key={response.cardId} className="result-row">
@@ -212,7 +214,7 @@ function ResultsPage() {
                       response.result === 'right' ? 'badge badge--success' : 'badge badge--danger'
                     }
                   >
-                    {response.result === 'right' ? 'Correct' : 'Review'}
+                    {response.result === 'right' ? t('results.correctBadge') : t('results.reviewBadge')}
                   </span>
                 </div>
                 <p>{response.back}</p>
