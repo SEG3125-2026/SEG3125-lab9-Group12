@@ -20,7 +20,7 @@ const translations = {
     'nav.switchToEnglish': 'Switch to English',
     'nav.switchToFrench': 'Switch to French',
 
-    'home.eyebrow': 'Defy the Conventional • Repoussez les frontieres',
+    'home.eyebrow': 'Defy the Conventional',
     'home.titleLead': 'Master any subject with',
     'home.titleAccent': ' interactive flashcards',
     'home.description':
@@ -227,7 +227,7 @@ const translations = {
     'nav.switchToEnglish': 'Passer en anglais',
     'nav.switchToFrench': 'Passer en francais',
 
-    'home.eyebrow': 'Defiez le conventionnel • Repoussez les frontieres',
+    'home.eyebrow': 'Defiez le conventionnel',
     'home.titleLead': "Maitrisez n'importe quelle matiere avec",
     'home.titleAccent': ' des cartes memoire interactives',
     'home.description':
