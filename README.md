@@ -1,4 +1,88 @@
-# uoDecks
+# ---OVERVIEW---
+
+This repository contains a flashcard management system designed for efficient study sessions and deck customization.
+
+## Application Checklist
+
+### Navigation & Discovery
+- [ ] **Home:** Accessible landing page.
+- [ ] **About:** Background and the description of the application.
+- [ ] **Browse Overview:** View and manage all decks.
+- [ ] **Recent Activities:** Quick access to recently used or created content.
+
+### Deck Creation & Validation
+- [ ] **Create New Deck:** Interface for adding custom study material.
+- [ ] **Builder Tips:** Contextual help for creating high-quality cards.
+- [ ] **Error Handling:** - Prevents submission if fields are empty.
+    - Requires all fields to be "Filled up" before saving.
+- [ ] **Navigation:** Smooth transition back to "Browse" after creation.
+
+### Study Mode (Gameplay)
+- [ ] **Play Deck:** Start a session with newly created or existing cards.
+- [ ] **Play Again:** Option to restart the deck for reinforcement.
+- [ ] **100% Completion:** Victory visual and sound feedback upon finishing a deck perfectly.
+- [ ] **Action Buttons:** Clear controls for navigating through cards.
+- [ ] **Exit Strategy:** Easy return to the other sections.
+
+### Localization & Language
+- [ ] **French Toggle:** Global UI language switch available on all pages.
+- [ ] **Input Persistence:** > **Note:** Card content remains in the user's original input language. The system does not alter user-generated text to ensure accuracy.
+- [ ] **Future Roadmap:** Implementation of a **dynamic translator** for card content.
+
+# --- FRONTEND - USABILITY HEURISTICS ---
+## 1. Visibility of System Status
+The UI ensures users always know what is happening through real-time feedback.
+* **Progress Tracking:** Study sessions include a progress bar and card counter for immediate feedback.
+* **Active States:** The navigation bar uses a **red pill highlight** to indicate the user's current location.
+* **Success Feedback:** The "Study session complete!" screen features a large circular accuracy meter for a high-impact summary.
+
+## 2. Match Between System & Real World (Mapping)
+The app uses familiar metaphors and language tailored to student life.
+* **Terminology:** Concepts like "Decks," "Flashcards," and "Course Categories" align with physical study habits.
+* **Iconography:** Standard conventions are followed (e.g., 🔍 for search, 📖 for "About," and ➕ for "Create").
+
+## 3. User Control & Freedom
+Users are provided with clear "emergency exits" and undo capabilities.
+* **Exit Routes:** A "Back to Decks" button allows users to leave a study session at any time.
+* **Management:** The "Browse" and "Recently Viewed" sections offer "Edit" and "Delete" buttons for full control over content.
+
+## 4. Consistency & Standards
+The interface maintains a unified look and feel throughout the application.
+* **Color Palette:** Primary actions utilize **uOttawa Red**, paired with soft grays for secondary containers to maintain brand identity.
+* **Layout:** A card-based design is applied universally, from the "About" page to the "Library," creating a predictable visual rhythm.
+
+## 5. Error Prevention
+The system is designed to stop errors before they occur.
+* **Form Validation:** Red asterisks and specific warnings (e.g., *"Each flashcard needs both a front and a back"*) prevent saving broken decks.
+* **Constraint Handling:** The "Save" function remains disabled until all requirements are met.
+
+## 6. Recognition Rather Than Recall
+Information is kept visible to reduce the user's memory load.
+* **Recently Viewed Decks:** Recent activity is pinned to the Browse page so users don't have to search for their last project.
+* **Visual Summaries:** The Library Overview provides a snapshot of all available decks and categories at a glance.
+
+## 7. Flexibility & Efficiency of Use
+The app caters to both novice and power users.
+* **Keyboard Shortcuts:** Advanced users can navigate faster using `SPACE`, `W`, `C`, and `R`.
+* **Filters:** Category selectors allow for quick sorting of large libraries.
+
+## 8. Aesthetic & Minimalist Design
+The UI provides only necessary information in an elegant way.
+* **Whitespace:** The landing page uses generous spacing to focus attention on the "Start Learning" call to action.
+* **No Clutter:** Secondary information is tucked behind "Learn More" or "Show Less" toggles.
+
+## 9. Help Users Recognize, Diagnose, & Recover from Errors
+Error messages are expressed in plain language and provide clear solutions.
+* **Visual Cues:** Missing fields are highlighted in red with a warning icon for instant recognition.
+* **Plain Language:** Notifications explain *why* an action was stopped (e.g., *"The builder keeps incomplete cards from being saved to prevent study errors"*).
+
+## 10. Help & Documentation
+Proactive and in-place hints guide the user through complex tasks.
+* **Proactive Hints:** A "View Builder Tips" button is integrated directly into the creation screen.
+* **Integrated Manual:** The "About" section explains the study structure and how the platform supports student needs.
+
+
+# --- BACKEND ---
 
 - Exploring: browse, search, and filter decks
 - Following instructions / Production: guided deck creation and editing
